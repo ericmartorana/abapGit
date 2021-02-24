@@ -9,64 +9,63 @@ CLASS zcl_abapgit_string_map DEFINITION
       BEGIN OF ty_entry,
         k TYPE string,
         v TYPE string,
-      END OF ty_entry.
+      END OF ty_entry .
     TYPES:
-      ty_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k.
+      ty_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k .
+
+    DATA mt_entries TYPE ty_entries READ-ONLY .
 
     CLASS-METHODS create
       IMPORTING
-        iv_case_insensitive TYPE abap_bool DEFAULT abap_false
+        !iv_case_insensitive TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map.
+        VALUE(ro_instance)   TYPE REF TO zcl_abapgit_string_map .
     METHODS constructor
       IMPORTING
-        iv_case_insensitive TYPE abap_bool DEFAULT abap_false.
+        !iv_case_insensitive TYPE abap_bool DEFAULT abap_false .
     METHODS get
       IMPORTING
-        iv_key        TYPE string
+        !iv_key       TYPE string
       RETURNING
-        VALUE(rv_val) TYPE string.
+        VALUE(rv_val) TYPE string .
     METHODS has
       IMPORTING
-        iv_key        TYPE string
+        !iv_key       TYPE string
       RETURNING
-        VALUE(rv_has) TYPE abap_bool.
+        VALUE(rv_has) TYPE abap_bool .
     METHODS set
       IMPORTING
-        iv_key TYPE string
-        iv_val TYPE string OPTIONAL
+        !iv_key       TYPE string
+        !iv_val       TYPE csequence OPTIONAL
       RETURNING
         VALUE(ro_map) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS size
       RETURNING
-        VALUE(rv_size) TYPE i.
+        VALUE(rv_size) TYPE i .
     METHODS is_empty
       RETURNING
-        VALUE(rv_yes) TYPE abap_bool.
+        VALUE(rv_yes) TYPE abap_bool .
     METHODS delete
       IMPORTING
-        iv_key TYPE string
+        !iv_key TYPE string
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS clear
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS to_abap
       CHANGING
         !cs_container TYPE any
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS strict
       IMPORTING
-        !iv_strict TYPE abap_bool DEFAULT abap_true
+        !iv_strict         TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map .
-    METHODS freeze.
-
-    DATA mt_entries TYPE ty_entries READ-ONLY.
-
+    METHODS freeze .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_read_only TYPE abap_bool.
@@ -195,7 +194,6 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
   METHOD to_abap.
 
     DATA lo_type TYPE REF TO cl_abap_typedescr.
-    DATA lo_struc TYPE REF TO cl_abap_structdescr.
     DATA lv_field TYPE string.
     FIELD-SYMBOLS <ls_entry> LIKE LINE OF mt_entries.
     FIELD-SYMBOLS <lv_val> TYPE any.
@@ -206,7 +204,6 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Only structures supported' ).
     ENDIF.
 
-    lo_struc ?= lo_type.
     LOOP AT mt_entries ASSIGNING <ls_entry>.
       lv_field = to_upper( <ls_entry>-k ).
       ASSIGN COMPONENT lv_field OF STRUCTURE cs_container TO <lv_val>.

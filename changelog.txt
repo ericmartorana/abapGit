@@ -8,6 +8,64 @@ Legend
 + : added
 - : removed
 
+2021-01-27 v1.105.0
+-------------------
+! handling of namespaces changed
+! BDEF handler adjustments
++ new handler for SUSH
++ Refresh button added to stage page
++ Automatic creation of top repository package
+* raise error if package is not part of package hierarchy
+* SHI5 add to transport
+* ENxx fix errors when uninstalling
+* reduce memory consumption during deserialize
+* DDLS fix dump during serialization
+* ENHC add last changed by
+* fix dump when switching to PR
+* W3xx add object to transport on uninstall
+* Uninstall ENQU before TABL
+* prevent staging of duplicate files
+* AVAR remove tadir on uninstall
+* allow repo names with dots
+* TABL, set default ROWORCOLST on deserialize
+
+2020-12-28 v1.104.0
+-------------------
++ ui, new pages for global and personal settings
++ ENHO: Implement missing deserialize for WDYC
++ Check objects when installing into main package
++ Checkout commit: additional user interface
+! log object refactoring
+* better abapGit package structure
+* CLIF, improve error message
+* PINF, missing transport entry
+* TRAN, improve error messages
+* DOMA, fix serialize for missing translations
+* Fix dump when using abapGit for more than 50 navigation steps
+* PROG: Fix transport and work area
+* SOTS: Get changed by
+* SMIM, improve error message
+* DSYS, get changed by
+* Fix master language only, duplicate entries for shi3 objects
+* WDYN, improve error message
+* VIEW: Fix deserialize of maintenance views
+* Serialise only main language for ENHS and ENHO objects
+* fix creation of TR entries for uninstalled PROGs
+* Fix sorting of objects in repo view
+* TABL: No structure comparison for global temp tables
+* Implement jump for CUS1
+* Implement jump for CUS0
+
+2020-11-22 v1.103.0
+-------------------
+! DDLS file format changes, newline
+! VIEW file format changes, less data
++ Support jump for SHI3
++ Support jump for SHI5
+* New help buttons in new online/offline forms
+* Better error handling for uninstall
+* Documentation updates
+
 2020-11-12 v1.102.0
 -------------------
 + Backup and restore for abapGit persistency

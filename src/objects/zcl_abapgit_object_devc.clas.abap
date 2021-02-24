@@ -91,11 +91,12 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " Ignore the SOTR if is linked to the current SAP package (DEVC)
     SELECT SINGLE obj_name
            FROM tadir
            INTO lv_object_name
            WHERE pgmid = 'R3TR'
-           AND NOT ( object = 'DEVC' AND obj_name = iv_package_name )
+           AND NOT ( ( object = 'DEVC' OR object = 'SOTR' ) AND obj_name = iv_package_name )
            AND devclass = iv_package_name.
     rv_is_empty = boolc( sy-subrc <> 0 ).
 
@@ -161,7 +162,8 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ENDLOOP.
 
     " Remove TADIR entries for objects that do not exist anymore
-    SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir WHERE devclass = iv_package_name.
+    SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir
+      WHERE devclass = iv_package_name ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_tadir INTO ls_tadir.
       ls_item-obj_type = ls_tadir-object.
@@ -403,7 +405,7 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
               intern_err            = 4
               OTHERS                = 5.
 
-        CATCH cx_root.
+        CATCH cx_sy_dyn_call_param_not_found.
 
           li_package->delete(
             EXCEPTIONS
@@ -419,18 +421,32 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      li_package->save(
-        EXPORTING
-          i_suppress_dialog     = abap_true
-        EXCEPTIONS
-          object_invalid        = 1
-          object_not_changeable = 2
-          cancelled_in_corr     = 3
-          permission_failure    = 4
-          unexpected_error      = 5
-          intern_err            = 6
-          OTHERS                = 7 ).
+      TRY.
+          CALL METHOD li_package->('SAVE')
+            EXPORTING
+              i_suppress_dialog     = abap_true
+            EXCEPTIONS
+              object_invalid        = 1
+              object_not_changeable = 2
+              cancelled_in_corr     = 3
+              permission_failure    = 4
+              unexpected_error      = 5
+              intern_err            = 6
+              OTHERS                = 7.
 
+        CATCH cx_sy_dyn_call_param_not_found.
+
+          li_package->save(
+            EXCEPTIONS
+              object_invalid        = 1
+              object_not_changeable = 2
+              cancelled_in_corr     = 3
+              permission_failure    = 4
+              unexpected_error      = 5
+              intern_err            = 6
+              OTHERS                = 7 ).
+
+      ENDTRY.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
@@ -462,7 +478,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
     " Swap out repository package name with the local installation package name
     ls_package_data-devclass = mv_local_devclass.
-    ls_package_data-pdevclass = li_package->transport_layer.
+    IF li_package IS BOUND.
+      ls_package_data-pdevclass = li_package->transport_layer.
+    ENDIF.
 
     " Parent package is not changed. Assume the folder logic already created the package and set
     " the hierarchy before.

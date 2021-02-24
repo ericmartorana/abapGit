@@ -40,13 +40,13 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS on_event
-          FOR EVENT sapevent OF zif_abapgit_html_viewer
+        FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
-          !action
-          !frame
-          !getdata
-          !postdata
-          !query_table .
+        !action
+        !frame
+        !getdata
+        !postdata
+        !query_table .
     METHODS constructor
       IMPORTING
         !io_component         TYPE REF TO object OPTIONAL
@@ -83,7 +83,9 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         !iv_text      TYPE string
       RETURNING
-        VALUE(rv_url) TYPE w3url .
+        VALUE(rv_url) TYPE w3url
+      RAISING
+        zcx_abapgit_exception .
     METHODS startup
       RAISING
         zcx_abapgit_exception .
@@ -101,7 +103,7 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         !iv_action   TYPE c
         !iv_getdata  TYPE c OPTIONAL
-        !it_postdata TYPE cnht_post_data_tab OPTIONAL .
+        !it_postdata TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL .
     METHODS handle_error
       IMPORTING
         !ix_exception TYPE REF TO zcx_abapgit_exception .
@@ -109,13 +111,19 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
 
     DATA: lv_index TYPE i,
           ls_stack LIKE LINE OF mt_stack.
+
+    " If viewer is showing Internet page, then use browser navigation
+    IF mi_html_viewer->get_url( ) CP 'http*'.
+      mi_html_viewer->back( ).
+      RETURN.
+    ENDIF.
 
     lv_index = lines( mt_stack ).
 
@@ -430,9 +438,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         IMPORTING
           ev_assigned_url = rv_url
         CHANGING
-          ct_data_table   = lt_html
-        EXCEPTIONS
-          OTHERS          = 1 ).
+          ct_data_table   = lt_html ).
     ELSE. " Raw input
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -450,9 +456,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         IMPORTING
           ev_assigned_url = rv_url
         CHANGING
-          ct_data_table   = lt_xdata
-        EXCEPTIONS
-          OTHERS          = 1 ).
+          ct_data_table   = lt_xdata ).
     ENDIF.
 
     ASSERT sy-subrc = 0. " Image data error
@@ -462,8 +466,19 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~get_current_page_name.
 
+    DATA li_page_hoc TYPE REF TO zcl_abapgit_gui_page_hoc.
+
     IF mi_cur_page IS BOUND.
       rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
+
+      " For HOC components return name of child component instead
+      IF rv_page_name = 'ZCL_ABAPGIT_GUI_PAGE_HOC'.
+        li_page_hoc ?= mi_cur_page.
+        IF li_page_hoc->get_child( ) IS BOUND.
+          rv_page_name = cl_abap_classdescr=>describe_by_object_ref(
+                           li_page_hoc->get_child( ) )->get_relative_name( ).
+        ENDIF.
+      ENDIF.
     ENDIF." ELSE - return is empty => initial page
 
   ENDMETHOD.

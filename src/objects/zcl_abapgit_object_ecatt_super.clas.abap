@@ -136,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
 
   METHOD clear_attributes.
@@ -215,7 +215,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
           lo_upload   TYPE REF TO cl_apl_ecatt_upload,
           li_upload   TYPE REF TO zif_abapgit_ecatt_upload,
           lv_xml      TYPE xstring,
-          lv_text     TYPE string,
           li_document TYPE REF TO if_ixml_document,
           lv_version  TYPE string,
           lx_error    TYPE REF TO cx_ecatt.
@@ -246,8 +245,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
         lo_upload->upload( CHANGING ch_object = ls_object ).
 
       CATCH cx_ecatt INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.
@@ -414,7 +412,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     DATA: ls_last_changed      TYPE ty_last_changed,
           ls_currently_changed TYPE ty_last_changed,
           lt_version_info      TYPE etversinfo_tabtype,
-          lx_error             TYPE REF TO cx_ecatt,
+          lx_error             TYPE REF TO cx_static_check,
           lv_text              TYPE string,
           lv_object_type       TYPE etobj_type.
 
@@ -441,19 +439,15 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
         ENDLOOP.
 
-      CATCH cx_ecatt INTO lx_error.
+      CATCH cx_static_check INTO lx_error.
         lv_text = lx_error->get_text( ).
         MESSAGE lv_text TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.
 
     IF ls_last_changed-luser IS NOT INITIAL.
-
       rv_user = ls_last_changed-luser.
-
     ELSE.
-
       rv_user = c_user_unknown.
-
     ENDIF.
 
   ENDMETHOD.
@@ -579,7 +573,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
         OTHERS              = 3.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error { sy-subrc } from RS_TOOL_ACCESS | ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

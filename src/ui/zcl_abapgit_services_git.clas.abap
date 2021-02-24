@@ -97,6 +97,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
+
   METHOD checkout_commit.
 
     DATA: lo_repo            TYPE REF TO zcl_abapgit_repo_online,
@@ -371,7 +372,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <ls_status>
-                      WHERE lstate = zif_abapgit_definitions=>c_state-added.
+                      WHERE lstate = zif_abapgit_definitions=>c_state-added
+                         OR rstate = zif_abapgit_definitions=>c_state-deleted.
 
       READ TABLE lt_tadir ASSIGNING <ls_tadir>
                           WITH KEY pgmid    = 'R3TR'
@@ -507,7 +509,10 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_repo->select_commit( space ).
+    IF lo_repo->get_selected_commit( ) IS NOT INITIAL.
+      lo_repo->select_commit( space ).
+    ENDIF.
+
     lo_repo->select_branch( ls_branch-name ).
     COMMIT WORK AND WAIT.
 

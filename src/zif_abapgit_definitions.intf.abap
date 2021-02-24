@@ -145,7 +145,6 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_metadata,
       class        TYPE string,
       version      TYPE string,
-      late_deser   TYPE abap_bool, " refactor: can be removed later. replaced by steps
       delete_tadir TYPE abap_bool,
       ddic         TYPE abap_bool,
     END OF ty_metadata .
@@ -421,6 +420,8 @@ INTERFACE zif_abapgit_definitions
       repo_refresh                  TYPE string VALUE 'repo_refresh',
       repo_remove                   TYPE string VALUE 'repo_remove',
       repo_settings                 TYPE string VALUE 'repo_settings',
+      repo_local_settings           TYPE string VALUE 'repo_local_settings',
+      repo_infos                    TYPE string VALUE 'repo_infos',
       repo_purge                    TYPE string VALUE 'repo_purge',
       repo_newonline                TYPE string VALUE 'repo_newonline',
       repo_newoffline               TYPE string VALUE 'repo_newoffline',
@@ -436,7 +437,6 @@ INTERFACE zif_abapgit_definitions
       repo_open_in_master_lang      TYPE string VALUE 'repo_open_in_master_lang',
       repo_log                      TYPE string VALUE 'repo_log',
       abapgit_home                  TYPE string VALUE 'abapgit_home',
-      abapgit_install               TYPE string VALUE 'abapgit_install',
       zip_import                    TYPE string VALUE 'zip_import',
       zip_export                    TYPE string VALUE 'zip_export',
       zip_package                   TYPE string VALUE 'zip_package',
@@ -469,6 +469,7 @@ INTERFACE zif_abapgit_definitions
       go_tag_overview               TYPE string VALUE 'go_tag_overview',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
       go_settings                   TYPE string VALUE 'go_settings',
+      go_settings_personal          TYPE string VALUE 'go_settings_personal',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
       go_patch                      TYPE string VALUE 'go_patch',
       jump                          TYPE string VALUE 'jump',
@@ -509,5 +510,14 @@ INTERFACE zif_abapgit_definitions
       ignore TYPE ty_method VALUE 'I',
       skip   TYPE ty_method VALUE '?',
     END OF c_method .
+
+  TYPES:
+    ty_languages TYPE STANDARD TABLE OF sy-langu WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_i18n_params,
+      main_language         TYPE sy-langu,
+      main_language_only    TYPE abap_bool,
+      translation_languages TYPE ty_languages,
+    END OF ty_i18n_params .
 
 ENDINTERFACE.

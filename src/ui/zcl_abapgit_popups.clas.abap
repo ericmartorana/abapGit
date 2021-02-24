@@ -633,7 +633,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = |{ <ls_pull>-number } - { <ls_pull>-title } @{ <ls_pull>-user }|.
     ENDLOOP.
-    SORT lt_selection BY varoption DESCENDING.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
@@ -834,12 +833,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     <ls_field>-value = cv_include_sub_packages.
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
-    <ls_field>-name = 'MASTER_LANG_ONLY'.
+    <ls_field>-name = 'MAIN_LANG_ONLY'.
     <ls_field>-only_parameter = abap_true.
     <ls_field>-ddic_tabname = 'TVDIR'.
     <ls_field>-ddic_fieldname = 'FLAG'.
     <ls_field>-text = 'Main language only'.
-    <ls_field>-value = cv_serialize_master_lang_only.
+    <ls_field>-value = cv_main_language_only.
 
     popup_get_from_free_selections(
       EXPORTING
@@ -858,8 +857,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           et_object_name_filter = <ls_field>-value_range.
         WHEN 'INCLUDE_SUB_PACKAGES'.
           cv_include_sub_packages = boolc( <ls_field>-value IS NOT INITIAL ).
-        WHEN 'MASTER_LANG_ONLY'.
-          cv_serialize_master_lang_only = boolc( <ls_field>-value IS NOT INITIAL ).
+        WHEN 'MAIN_LANG_ONLY'.
+          cv_main_language_only = boolc( <ls_field>-value IS NOT INITIAL ).
       ENDCASE.
     ENDLOOP.
   ENDMETHOD.
@@ -1207,7 +1206,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     IF sy-subrc = 1.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ELSEIF sy-subrc > 1.
-      zcx_abapgit_exception=>raise( |Error from TRINT_ORDER_CHOICE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.

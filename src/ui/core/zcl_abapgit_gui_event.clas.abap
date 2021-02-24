@@ -12,7 +12,7 @@ CLASS zcl_abapgit_gui_event DEFINITION
         !ii_gui_services TYPE REF TO zif_abapgit_gui_services OPTIONAL
         !iv_action       TYPE clike
         !iv_getdata      TYPE clike OPTIONAL
-        !it_postdata     TYPE cnht_post_data_tab OPTIONAL .
+        !it_postdata     TYPE zif_abapgit_html_viewer=>ty_post_data OPTIONAL .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mo_query TYPE REF TO zcl_abapgit_string_map.
@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_EVENT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_event IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -39,6 +39,10 @@ CLASS ZCL_ABAPGIT_GUI_EVENT IMPLEMENTATION.
     zif_abapgit_gui_event~mv_action       = iv_action.
     zif_abapgit_gui_event~mv_getdata      = iv_getdata.
     zif_abapgit_gui_event~mt_postdata     = it_postdata.
+
+    IF ii_gui_services IS BOUND.
+      zif_abapgit_gui_event~mv_current_page_name = ii_gui_services->get_current_page_name( ).
+    ENDIF.
 
   ENDMETHOD.
 

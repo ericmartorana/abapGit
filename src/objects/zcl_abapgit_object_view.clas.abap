@@ -43,7 +43,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_object_view IMPLEMENTATION.
 
 
   METHOD read_view.
@@ -69,7 +69,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
         illegal_input = 1
         OTHERS        = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_VIEW_GET' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -109,6 +109,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
           lt_dd28j TYPE TABLE OF dd28j,
           lt_dd28v TYPE TABLE OF dd28v.
 
+    FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
     io_xml->read( EXPORTING iv_name = 'DD25V'
                   CHANGING cg_data = ls_dd25v ).
@@ -123,10 +124,29 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
                   CHANGING cg_data = lt_dd28v ).
 
-    corr_insert( iv_package = iv_package
-                 ig_object_class = 'DICT' ).
+    " Process maintenance views during LATE to avoid issues with missing foreign key relationships (#4306)
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd25v-viewclass = 'C'.
+      RETURN.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd25v-viewclass <> 'C'.
+      RETURN.
+    ENDIF.
 
     lv_name = ms_item-obj_name. " type conversion
+
+    LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
+      <ls_dd27p>-objpos = sy-tabix.
+      <ls_dd27p>-viewname = lv_name.
+* rollname seems to be mandatory in the API, but is typically not defined in the VIEW
+      SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
+        WHERE tabname = <ls_dd27p>-tabname
+        AND fieldname = <ls_dd27p>-fieldname.
+      IF <ls_dd27p>-rollnamevi IS INITIAL.
+        <ls_dd27p>-rollnamevi = <ls_dd27p>-rollname.
+      ENDIF.
+    ENDLOOP.
+
+    corr_insert( iv_package = iv_package
+                 ig_object_class = 'DICT' ).
 
     CALL FUNCTION 'DDIF_VIEW_PUT'
       EXPORTING
@@ -146,7 +166,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_VIEW_PUT' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -188,6 +208,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -228,13 +249,12 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
             OTHERS              = 3.
 
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS. Subrc={ sy-subrc }| ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
       WHEN OTHERS.
 
-        jump_se11( iv_radio = 'RSRD1-VIMA'
-                   iv_field = 'RSRD1-VIMA_VAL' ).
+        jump_se11( ).
 
     ENDCASE.
 
@@ -295,6 +315,13 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
              <ls_dd27p>-scrlen2,
              <ls_dd27p>-scrlen3,
              <ls_dd27p>-memoryid.
+      IF <ls_dd27p>-rollchange = abap_false.
+        CLEAR <ls_dd27p>-rollnamevi.
+      ENDIF.
+      CLEAR <ls_dd27p>-ddlanguage.
+      CLEAR <ls_dd27p>-rollname.
+      CLEAR <ls_dd27p>-viewname.
+      CLEAR <ls_dd27p>-objpos.
     ENDLOOP.
 
     io_xml->add( iv_name = 'DD25V'
